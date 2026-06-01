@@ -1,0 +1,117 @@
+.ticket-controls {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.search-box input {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px 0 0 8px;
+    outline: none;
+    width: 200px;
+}
+
+.search-box button {
+    padding: 10px 15px;
+    background: var(--dark);
+    color: white;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+}
+
+.ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.ticket-node {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.ticket-node:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.ticket-node.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.ticket-node.sold {
+    background: #f1f5f9;
+    color: #cbd5e1;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+/* Leyenda */
+.status-legend { display: flex; gap: 15px; font-size: 0.85rem; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.available { background: white; border: 1px solid var(--border); }
+.dot.selected { background: var(--primary); }
+.dot.sold { background: #cbd5e1; }
+/* ==========================================================================
+   ESTILOS DE LA BARRA DE PROGRESO PREMIUM (ZONA B&R)
+   ========================================================================== */
+
+   .progress-percentage {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.luxury-progress-bg {
+    width: 100%;
+    background-color: #222;
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.luxury-progress-fill {
+    /* El width se controla dinámicamente mediante Jinja2/Flask */
+    background: linear-gradient(90deg, #b8860b, #d4af37, #f1c40f);
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ajustes limpios para los componentes del modal QR */
+.qr-modal-header .breb-logo {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+}
+
+.highlight-key {
+    color: var(--gold-light, #d4af37);
+}

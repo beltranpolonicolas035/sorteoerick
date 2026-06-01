@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Confirmación de Compra | Zona B&R</title>
+    <!--[if mso]>
+    <noscript>
+        <xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml>
+    </noscript>
+    <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#0D0D0D;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:none;">
+
+<!-- WRAPPER -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0D0D0D;min-height:100vh;">
+    <tr>
+        <td align="center" style="padding:40px 20px;">
+
+            <!-- TARJETA PRINCIPAL (max 620px) -->
+            <table width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;width:100%;">
+
+                <!-- ── HEADER ── -->
+                <tr>
+                    <td style="background-color:#141414;border-radius:16px 16px 0 0;padding:0;overflow:hidden;border:1px solid rgba(201,168,76,0.2);border-bottom:none;">
+
+                        <!-- Franja dorada superior -->
+                        <div style="height:3px;background:linear-gradient(90deg,#8B6914,#F0D080,#8B6914);"></div>
+
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td align="center" style="padding:36px 40px 28px 40px;">
+
+                                    <!-- Logo / marca -->
+                                    <div style="display:inline-block;background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(139,105,20,0.1));border:1px solid rgba(201,168,76,0.35);border-radius:50px;padding:7px 22px;margin-bottom:22px;">
+                                        <span style="font-size:11px;font-weight:700;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;">✦ SORTEO OFICIAL ✦</span>
+                                    </div>
+
+                                    <!-- Título -->
+                                    <h1 style="margin:0 0 8px 0;font-size:32px;font-weight:900;color:#F5F0E8;letter-spacing:-0.5px;line-height:1.1;">
+                                        ¡Tu compra fue<br>
+                                        <span style="color:#F0D080;">confirmada!</span>
+                                    </h1>
+
+                                    <p style="margin:14px 0 0 0;font-size:15px;color:#A89880;line-height:1.6;">
+                                        Hola <strong style="color:#F5F0E8;">{{ nombre_cliente }}</strong>, tu pago fue validado<br>
+                                        por nuestro equipo. ¡Ya estás en el sorteo!
+                                    </p>
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- ── CUERPO PRINCIPAL ── -->
+                <tr>
+                    <td style="background-color:#1E1E1E;border-left:1px solid rgba(201,168,76,0.2);border-right:1px solid rgba(201,168,76,0.2);padding:0;">
+
+                        <!-- Premio -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding:28px 40px 0 40px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(139,105,20,0.08));border:1px solid rgba(201,168,76,0.3);border-radius:12px;">
+                                        <tr>
+                                            <td align="center" style="padding:18px 24px;">
+                                                <span style="display:block;font-size:11px;font-weight:700;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">🏆 Premio Mayor</span>
+                                                <span style="display:block;font-size:28px;font-weight:900;color:#F0D080;letter-spacing:-0.5px;line-height:1;">$6.000.000 COP</span>
+                                                <span style="display:block;font-size:12px;color:#A89880;margin-top:4px;">En efectivo al ganador</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Título sección tickets -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding:28px 40px 16px 40px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;">
+                                                <p style="margin:0;font-size:11px;font-weight:700;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;">Tus números de la suerte</p>
+                                                <p style="margin:6px 0 0 0;font-size:13px;color:#6B6055;">Guárdalos bien — estos son tus tickets para el sorteo</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- GRID DE TICKETS -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td align="center" style="padding:0 32px 28px 32px;">
+
+                                    <!--
+                                        Los tickets se renderizan con Jinja2.
+                                        El loop genera grupos de columnas de 3.
+                                        Para email usamos tablas porque Flexbox/Grid no funciona en todos los clientes.
+                                    -->
+                                    {% for num in numeros %}
+
+                                    <!-- Cada ticket como celda inline-block -->
+                                    <div style="display:inline-block;margin:5px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,#1C1C1C,#242424);border:1px solid rgba(201,168,76,0.35);border-radius:8px;min-width:88px;">
+                                            <tr>
+                                                <td align="center" style="padding:10px 14px 8px 14px;">
+                                                    <!-- Línea decorativa superior dorada -->
+                                                    <div style="height:2px;background:linear-gradient(90deg,transparent,#C9A84C,transparent);border-radius:2px;margin-bottom:8px;"></div>
+                                                    <span style="display:block;font-size:9px;font-weight:700;color:#6B6055;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">TICKET</span>
+                                                    <span style="display:block;font-size:20px;font-weight:900;color:#F0D080;letter-spacing:1px;font-family:'Courier New',monospace;">{{ num }}</span>
+                                                    <!-- Línea decorativa inferior dorada -->
+                                                    <div style="height:2px;background:linear-gradient(90deg,transparent,#C9A84C,transparent);border-radius:2px;margin-top:8px;"></div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                    {% endfor %}
+
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Aviso importante -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding:0 40px 28px 40px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;">
+                                        <tr>
+                                            <td style="padding:16px 18px;">
+                                                <p style="margin:0;font-size:12px;color:#6B6055;line-height:1.7;">
+                                                    ℹ️ <strong style="color:#A89880;">Recuerda:</strong> La rifa se realizará únicamente cuando todos los números estén vendidos. Te notificaremos cuando se acerque la fecha del sorteo.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- ── FOOTER ── -->
+                <tr>
+                    <td style="background-color:#141414;border-radius:0 0 16px 16px;border:1px solid rgba(201,168,76,0.2);border-top:1px solid rgba(255,255,255,0.06);">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td align="center" style="padding:28px 40px 32px 40px;">
+
+                                    <p style="margin:0 0 6px 0;font-size:22px;">🍀</p>
+                                    <p style="margin:0 0 4px 0;font-size:16px;font-weight:700;color:#F5F0E8;">¡Mucha suerte en el sorteo!</p>
+                                    <p style="margin:0 0 20px 0;font-size:13px;color:#A89880;">El equipo de Zona B&R te desea lo mejor</p>
+
+                                    <!-- Separador -->
+                                    <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:20px;"></div>
+
+                                    <!-- Contacto -->
+                                    <p style="margin:0 0 4px 0;font-size:12px;color:#4A4A4A;">
+                                        ¿Dudas? Escríbenos a
+                                        <a href="mailto:zonabyr26@gmail.com" style="color:#C9A84C;text-decoration:none;">zonabyr26@gmail.com</a>
+                                        &nbsp;|&nbsp;
+                                        <a href="https://www.instagram.com/zona_byr" style="color:#C9A84C;text-decoration:none;">@zona_byr</a>
+                                    </p>
+
+                                    <p style="margin:16px 0 0 0;font-size:11px;color:#3A3A3A;line-height:1.6;">
+                                        Este es un mensaje automático. Por favor no respondas este correo.<br>
+                                        © 2026 Zona B&R Sesquile. Todos los derechos reservados.
+                                    </p>
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+            <!-- /TARJETA PRINCIPAL -->
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

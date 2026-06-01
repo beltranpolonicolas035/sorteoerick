@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    padding: 30px;
+    background-color: #f4f6f9;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.email-container {
+    max-width: 700px;
+    margin: auto;
+    background: #ffffff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    background: linear-gradient(135deg, #f7a600, #ffbf3f);
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+.header p {
+    margin-top: 10px;
+    opacity: 0.9;
+}
+
+.content {
+    padding: 35px;
+    text-align: center;
+}
+
+.content h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.message {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.tickets-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+.ticket {
+    width: 120px;
+    padding: 15px;
+    border: 2px solid #f7a600;
+    border-radius: 12px;
+    background: #fff9ec;
+    transition: 0.3s;
+}
+
+.ticket-label {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.ticket-number {
+    display: block;
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #d48800;
+}
+
+.footer {
+    background: #fafafa;
+    border-top: 1px solid #eaeaea;
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.footer small {
+    display: block;
+    margin-top: 10px;
+    color: #999;
+}

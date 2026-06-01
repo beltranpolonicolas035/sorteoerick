@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control | Zona B&R</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+
+    <nav class="admin-nav">
+        <div class="admin-nav-brand">
+            <div class="admin-nav-logo">B&R</div>
+            <div>
+                <span class="admin-nav-title">Panel de Control</span>
+                <span class="admin-nav-sub">Zona B&R · Administración</span>
+            </div>
+        </div>
+        <div class="admin-nav-right">
+            <a href="{{ url_for('admin.admin_historial') }}" ...>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 2px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Historial y Control
+            </a>
+
+            <span class="admin-nav-user">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                Administrador
+            </span>
+            <a href="/logout" class="admin-btn-logout">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar Sesión
+            </a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="admin-alerts-container" style="margin-bottom: 20px;">
+                    {% for message in messages %}
+                        <div class="alert-box" style="padding: 12px 16px; background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; color: #fff; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; margin-bottom: 10px;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-page-header">
+            <div>
+                <h1 class="admin-page-title">Validación de Pagos</h1>
+                <p class="admin-page-sub">Revisa y aprueba los comprobantes enviados por los participantes</p>
+            </div>
+            <div class="admin-pending-badge">
+                <span class="badge-dot"></span>
+                {{ total_pendientes }} pendiente{% if total_pendientes != 1 %}s{% endif %}
+            </div>
+        </div>
+
+        <div class="admin-stats">
+            <div class="admin-stat-card">
+                <div class="stat-icon-box amber">🎟️</div>
+                <div class="stat-body">
+                    <span class="stat-num">{{ total_pendientes }}</span>
+                    <span class="stat-lbl">Pendientes</span>
+                </div>
+            </div>
+            <div class="admin-stat-card dark-card">
+                <div class="stat-icon-box gold">💰</div>
+                <div class="stat-body">
+                    <span class="stat-num">$0</span>
+                    <span class="stat-lbl">Recaudado hoy</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-table-wrap">
+            <div class="admin-table-header">
+                <div>
+                    <h2 class="admin-table-title">Comprobantes pendientes</h2>
+                    <p class="admin-table-sub">{{ compras_pendientes|length }} registros encontrados</p>
+                </div>
+                <div class="admin-table-search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="adminSearchInput" placeholder="Buscar participante...">
+                </div>
+            </div>
+
+            <div class="admin-table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Participante</th>
+                            <th>Cédula</th>
+                            <th>WhatsApp</th>
+                            <th>Correo</th>
+                            <th>Ciudad</th>
+                            <th>Tickets</th>
+                            <th>Monto</th>
+                            <th>Comprobante</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if compras_pendientes %}
+                            {% for compra in compras_pendientes %}
+                            <tr>
+                                <td>
+                                    <span class="td-date">{{ compra.fecha_creacion.strftime('%d %b') }}</span>
+                                    <span class="td-year">{{ compra.fecha_creacion.strftime('%Y') }}</span>
+                                </td>
+                                <td>
+                                    <div class="td-user">
+                                        <div class="td-avatar">{{ compra.nombre[0] | upper }}</div>
+                                        <div>
+                                            <span class="td-name">{{ compra.nombre }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="td-mono">{{ compra.cedula }}</span></td>
+                                <td><span class="td-mono">{{ compra.whatsapp }}</span></td>
+                                <td><span class="td-mono">{{ compra.correo }}</span></td>
+                                <td><span class="td-city">{{ compra.ciudad }}</span></td>
+                                <td>
+                                    <span class="td-tickets" style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #d4af37;">
+                                        {{ compra.cantidad_tickets }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="td-amount">
+                                        ${{ "{:,.0f}".format(compra.cantidad_tickets * 700).replace(',', '.') }}
+                                    </strong>
+                                </td>
+                                <td>
+                                    <div class="img-wrap">
+                                        <img
+                                            src="{{ url_for('static', filename='uploads/' + compra.comprobante_pago) }}"
+                                            class="img-preview js-open-modal"
+                                            alt="Comprobante"
+                                            data-src="{{ url_for('static', filename='uploads/' + compra.comprobante_pago) }}"
+                                            style="cursor: pointer;"
+                                        >
+                                        <button class="img-zoom-btn js-open-modal" data-src="{{ url_for('static', filename='uploads/' + compra.comprobante_pago) }}">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-pill pending">⏳ {{ compra.estado | capitalize }}</span>
+                                </td>
+                                <td>
+                                    <div class="actions-wrap">
+                                        <form action="{{ url_for('admin.aprobar_compra', compra_id=compra.id) }}" method="POST">
+                                            <button type="submit" class="btn-action btn-confirm">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                Aprobar
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ url_for('admin.rechazar_compra', compra_id=compra.id) }}" method="POST">
+                                            <button type="submit" class="btn-action btn-reject">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                Rechazar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="11">
+                                    <div class="admin-empty">
+                                        <div class="admin-empty-icon">📬</div>
+                                        <h3 class="admin-empty-title">¡Al día!</h3>
+                                        <p class="admin-empty-sub">No hay comprobantes pendientes por revisar en este momento.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
