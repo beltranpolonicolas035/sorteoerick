@@ -48,18 +48,17 @@ def aprobar_compra(compra_id):
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # --- BLOQUE DE DEPURACIÓN DE CORREO ---
+            # Envío de correo optimizado para evitar bloqueos del servidor
             try:
-                print(f"DEBUG: Intentando enviar correo a {compra.correo}")
-                msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
-                msg.body = f"Tus números son: {', '.join(numeros_suerte)}"
-                mail.send(msg)
-                print("DEBUG: Correo enviado exitosamente")
-                flash(f"✅ Compra aprobada y correo enviado a {compra.nombre}.", "success")
+                with mail.connect() as conn:
+                    msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
+                    msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
+                    conn.send(msg)
+                flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
             except Exception as e:
-                print(f"DEBUG CRÍTICO: Error en el envío: {str(e)}")
-                flash(f"⚠️ Compra aprobada, pero hubo un error enviando el correo: {str(e)}", "warning")
-            # -------------------------------------
+                # Si el correo falla, no cancelamos la aprobación. Solo avisamos.
+                print(f"ERROR EN ENVÍO: {str(e)}")
+                flash(f"✅ Compra aprobada (aviso: error al enviar correo).", "warning")
             
     except Exception as e:
         db.session.rollback()
