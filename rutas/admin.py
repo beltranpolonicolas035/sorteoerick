@@ -58,7 +58,8 @@ def aprobar_compra(compra_id):
                     sender=remitente,
                     recipients=[compra.correo]
                 )
-                msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
+                # Cámbialo a esto para que use el diseño HTML:
+                msg.html = render_template('correo.html', nombre=compra.nombre, numeros=numeros_suerte)
                 
                 mail.send(msg)
                 flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
