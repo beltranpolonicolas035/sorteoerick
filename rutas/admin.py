@@ -33,34 +33,40 @@ def aprobar_compra(compra_id):
         compra = Compra.query.get_or_404(compra_id)
         
         if compra and compra.estado == 'pendiente':
-            tickets_vendidos = db.session.query(Boleta.numero).filter_by(estado='vendido').all()
-            numeros_ocupados = set([t.numero for t in tickets_vendidos])
+            # Optimizamos para no cargar 100k elementos en memoria
+            tickets_existentes = db.session.query(Boleta.numero).all()
+            numeros_ocupados = {t.numero for t in tickets_existentes}
             
-            numeros_disponibles = [str(i).zfill(5) for i in range(100000) if str(i).zfill(5) not in numeros_ocupados]
+            numeros_suerte = []
+            intentos = 0
+            # Generamos números aleatorios hasta completar la cantidad solicitada
+            while len(numeros_suerte) < compra.cantidad_tickets and intentos < 200000:
+                num = str(random.randint(0, 99999)).zfill(5)
+                if num not in numeros_ocupados:
+                    numeros_suerte.append(num)
+                    numeros_ocupados.add(num)
+                intentos += 1
             
-            if len(numeros_disponibles) < compra.cantidad_tickets:
-                flash("🛑 Error: No hay suficientes boletas disponibles.", "danger")
+            if len(numeros_suerte) < compra.cantidad_tickets:
+                flash("🛑 Error: No se pudieron generar suficientes números únicos.", "danger")
                 return redirect(url_for('admin.admin'))
-                
-            numeros_suerte = random.sample(numeros_disponibles, compra.cantidad_tickets)
             
-            for num in numeros_suerte:
-                nueva_boleta = Boleta(numero=num, estado='vendido', compra_id=compra.id)
-                db.session.add(nueva_boleta)
+            # Inserción eficiente
+            boletas_nuevas = [Boleta(numero=num, estado='vendido', compra_id=compra.id) for num in numeros_suerte]
+            db.session.add_all(boletas_nuevas)
                 
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Intento de envío de correo protegido para no romper la app
+            # Envío de correo protegido
             try:
                 msg = Message("¡Tus números de la rifa Zona B&R!", recipients=[compra.correo])
                 msg.html = render_template('correo.html', nombre_cliente=compra.nombre, numeros=numeros_suerte)
                 mail.send(msg)
                 flash(f"✅ ¡Compra de {compra.nombre} aprobada!", "success")
             except Exception as e:
-                # Logueamos el error pero permitimos que el pago siga aprobado
                 print(f"Error al enviar correo: {e}")
-                flash(f"✅ Compra aprobada, pero el correo no pudo enviarse.", "warning")
+                flash(f"✅ Compra aprobada, pero hubo problemas enviando el correo.", "warning")
             
     except Exception as e:
         db.session.rollback()
