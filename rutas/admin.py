@@ -13,7 +13,6 @@ admin_bp = Blueprint('admin', __name__)
 @login_requerido
 def admin():
     compras_pendientes = Compra.query.filter_by(estado='pendiente').order_by(Compra.fecha_creacion.desc()).all()
-    
     total_pendientes = len(compras_pendientes)
     total_aprobados = Compra.query.filter_by(estado='confirmado').count()
     total_rechazados = Compra.query.filter_by(estado='rechazado').count()
@@ -31,46 +30,32 @@ def admin():
 def aprobar_compra(compra_id):
     try:
         compra = Compra.query.get_or_404(compra_id)
-        
         if compra and compra.estado == 'pendiente':
-            # Optimizamos para no cargar 100k elementos en memoria
-            tickets_existentes = db.session.query(Boleta.numero).all()
-            numeros_ocupados = {t.numero for t in tickets_existentes}
+            
+            # OPTIMIZACIÓN: Solo obtenemos los números, no el objeto completo
+            # Usamos un conjunto (set) para búsqueda instantánea
+            ocupados = {b[0] for b in db.session.query(Boleta.numero).all()}
             
             numeros_suerte = []
-            intentos = 0
-            # Generamos números aleatorios hasta completar la cantidad solicitada
-            while len(numeros_suerte) < compra.cantidad_tickets and intentos < 200000:
-                num = str(random.randint(0, 99999)).zfill(5)
-                if num not in numeros_ocupados:
+            # Generación ligera en memoria
+            while len(numeros_suerte) < compra.cantidad_tickets:
+                num = f"{random.randint(0, 99999):05d}"
+                if num not in ocupados:
                     numeros_suerte.append(num)
-                    numeros_ocupados.add(num)
-                intentos += 1
-            
-            if len(numeros_suerte) < compra.cantidad_tickets:
-                flash("🛑 Error: No se pudieron generar suficientes números únicos.", "danger")
-                return redirect(url_for('admin.admin'))
+                    ocupados.add(num)
             
             # Inserción eficiente
-            boletas_nuevas = [Boleta(numero=num, estado='vendido', compra_id=compra.id) for num in numeros_suerte]
+            boletas_nuevas = [Boleta(numero=n, estado='vendido', compra_id=compra.id) for n in numeros_suerte]
             db.session.add_all(boletas_nuevas)
-                
+            
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Envío de correo protegido
-            try:
-                msg = Message("¡Tus números de la rifa Zona B&R!", recipients=[compra.correo])
-                msg.html = render_template('correo.html', nombre_cliente=compra.nombre, numeros=numeros_suerte)
-                mail.send(msg)
-                flash(f"✅ ¡Compra de {compra.nombre} aprobada!", "success")
-            except Exception as e:
-                print(f"Error al enviar correo: {e}")
-                flash(f"✅ Compra aprobada, pero hubo problemas enviando el correo.", "warning")
+            flash(f"✅ Compra de {compra.nombre} aprobada.", "success")
             
     except Exception as e:
         db.session.rollback()
-        flash(f"❌ Error crítico al procesar la compra: {str(e)}", "danger")
+        flash(f"❌ Error al procesar: {str(e)}", "danger")
         
     return redirect(url_for('admin.admin'))
 
@@ -78,13 +63,11 @@ def aprobar_compra(compra_id):
 @login_requerido
 def rechazar_compra(compra_id):
     compra = Compra.query.get_or_404(compra_id)
-    
     if compra and compra.estado == 'pendiente':
         compra.estado = 'rechazado'
         compra.comprobante_pago = None 
         db.session.commit()
         flash(f"❌ La compra de {compra.nombre} ha sido rechazada.", "danger")
-        
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/historial', methods=['GET'])
@@ -98,7 +81,6 @@ def admin_historial():
     
     if buscar_usuario:
         query = query.filter((Compra.nombre.like(f"%{buscar_usuario}%")) | (Compra.cedula.like(f"%{buscar_usuario}%")))
-    
     if buscar_numero:
         query = query.join(Boleta).filter(Boleta.numero == buscar_numero)
         
@@ -125,17 +107,12 @@ def reiniciar_sistema():
         if os.path.exists(folder):
             for filename in os.listdir(folder):
                 file_path = os.path.join(folder, filename)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    print(f"Error borrando archivo {filename}: {e}")
+                if os.path.isfile(file_path): os.unlink(file_path)
         
-        flash('¡Sistema restablecido correctamente!', 'success')
+        flash('¡Sistema restablecido!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error al reiniciar: {str(e)}', 'danger')
-        
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/publicar-ganador', methods=['POST'])
@@ -147,11 +124,9 @@ def publicar_ganador():
     
     if nombre and numero and premio:
         db.session.execute(db.text("TRUNCATE TABLE ganador_oficial RESTART IDENTITY CASCADE;"))
-        nuevo_ganador = Ganador(nombre=nombre, numero=numero, premio=premio)
-        db.session.add(nuevo_ganador)
+        db.session.add(Ganador(nombre=nombre, numero=numero, premio=premio))
         db.session.commit()
-        flash("🏆 ¡Ganador publicado con éxito!", "success")
+        flash("🏆 ¡Ganador publicado!", "success")
     else:
-        flash("⚠️ Todos los campos son obligatorios.", "danger")
-        
+        flash("⚠️ Campos obligatorios.", "danger")
     return redirect(url_for('admin.admin_historial'))
