@@ -5,13 +5,12 @@ from base_datos import db
 from modelos import Compra, Boleta, Ganador
 from flask_mail import Message
 from extensiones import mail
-# IMPORTACIÓN DEL PROTECTOR DE RUTAS
 from auth import login_requerido 
 
 admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/admin')
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def admin():
     compras_pendientes = Compra.query.filter_by(estado='pendiente').order_by(Compra.fecha_creacion.desc()).all()
     
@@ -28,44 +27,49 @@ def admin():
     )
 
 @admin_bp.route('/admin/aprobar/<int:compra_id>', methods=['POST'])
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def aprobar_compra(compra_id):
-    compra = Compra.query.get_or_404(compra_id)
-    
-    if compra and compra.estado == 'pendiente':
-        tickets_vendidos = db.session.query(Boleta.numero).filter_by(estado='vendido').all()
-        numeros_ocupados = set([t.numero for t in tickets_vendidos])
+    try:
+        compra = Compra.query.get_or_404(compra_id)
         
-        # Generar números disponibles (00000 al 99999)
-        numeros_disponibles = [str(i).zfill(5) for i in range(100000) if str(i).zfill(5) not in numeros_ocupados]
-        
-        if len(numeros_disponibles) < compra.cantidad_tickets:
-            flash("🛑 Error: No hay suficientes boletas disponibles.", "danger")
-            return redirect(url_for('admin.admin'))
+        if compra and compra.estado == 'pendiente':
+            tickets_vendidos = db.session.query(Boleta.numero).filter_by(estado='vendido').all()
+            numeros_ocupados = set([t.numero for t in tickets_vendidos])
             
-        numeros_suerte = random.sample(numeros_disponibles, compra.cantidad_tickets)
-        
-        for num in numeros_suerte:
-            nueva_boleta = Boleta(numero=num, estado='vendido', compra_id=compra.id)
-            db.session.add(nueva_boleta)
+            numeros_disponibles = [str(i).zfill(5) for i in range(100000) if str(i).zfill(5) not in numeros_ocupados]
             
-        compra.estado = 'confirmado'
-        db.session.commit()
-        
-        try:
-            msg = Message("¡Tus números de la rifa Zona B&R!", recipients=[compra.correo])
-            msg.html = render_template('correo.html', 
-                                        nombre_cliente=compra.nombre, 
-                                        numeros=numeros_suerte)
-            mail.send(msg)
-            flash(f"✅ ¡Compra de {compra.nombre} aprobada! Se generaron {compra.cantidad_tickets} números y se envió el correo.", "success")
-        except Exception as e:
-            flash(f"⚠️ Compra aprobada, pero hubo un error enviando el correo: {e}", "warning")
+            if len(numeros_disponibles) < compra.cantidad_tickets:
+                flash("🛑 Error: No hay suficientes boletas disponibles.", "danger")
+                return redirect(url_for('admin.admin'))
+                
+            numeros_suerte = random.sample(numeros_disponibles, compra.cantidad_tickets)
+            
+            for num in numeros_suerte:
+                nueva_boleta = Boleta(numero=num, estado='vendido', compra_id=compra.id)
+                db.session.add(nueva_boleta)
+                
+            compra.estado = 'confirmado'
+            db.session.commit()
+            
+            # Intento de envío de correo protegido para no romper la app
+            try:
+                msg = Message("¡Tus números de la rifa Zona B&R!", recipients=[compra.correo])
+                msg.html = render_template('correo.html', nombre_cliente=compra.nombre, numeros=numeros_suerte)
+                mail.send(msg)
+                flash(f"✅ ¡Compra de {compra.nombre} aprobada!", "success")
+            except Exception as e:
+                # Logueamos el error pero permitimos que el pago siga aprobado
+                print(f"Error al enviar correo: {e}")
+                flash(f"✅ Compra aprobada, pero el correo no pudo enviarse.", "warning")
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Error crítico al procesar la compra: {str(e)}", "danger")
         
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/rechazar/<int:compra_id>', methods=['POST'])
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def rechazar_compra(compra_id):
     compra = Compra.query.get_or_404(compra_id)
     
@@ -78,7 +82,7 @@ def rechazar_compra(compra_id):
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/historial', methods=['GET'])
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def admin_historial():
     buscar_usuario = request.args.get('buscar_usuario', '')
     buscar_numero = request.args.get('buscar_numero', '')
@@ -103,17 +107,14 @@ def admin_historial():
     )
 
 @admin_bp.route('/admin/reiniciar-sistema', methods=['POST'])
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def reiniciar_sistema():
     try:
-        # Limpieza de tablas (PostgreSQL compatible)
-        # Usamos TRUNCATE con RESTART IDENTITY para borrar datos y resetear IDs a 1
         db.session.execute(db.text("TRUNCATE TABLE boletas RESTART IDENTITY CASCADE;"))
         db.session.execute(db.text("TRUNCATE TABLE compras RESTART IDENTITY CASCADE;"))
         db.session.execute(db.text("TRUNCATE TABLE ganador_oficial RESTART IDENTITY CASCADE;"))
         db.session.commit()
         
-        # Limpieza de archivos físicos
         folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         if os.path.exists(folder):
             for filename in os.listdir(folder):
@@ -124,7 +125,7 @@ def reiniciar_sistema():
                 except Exception as e:
                     print(f"Error borrando archivo {filename}: {e}")
         
-        flash('¡Sistema restablecido correctamente en la nube!', 'success')
+        flash('¡Sistema restablecido correctamente!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error al reiniciar: {str(e)}', 'danger')
@@ -132,20 +133,17 @@ def reiniciar_sistema():
     return redirect(url_for('admin.admin'))
 
 @admin_bp.route('/admin/publicar-ganador', methods=['POST'])
-@login_requerido # RUTA PROTEGIDA
+@login_requerido
 def publicar_ganador():
     nombre = request.form.get('nombre_ganador')
     numero = request.form.get('numero_ganador')
     premio = request.form.get('premio')
     
     if nombre and numero and premio:
-        # Borramos al anterior ganador antes de publicar el nuevo
         db.session.execute(db.text("TRUNCATE TABLE ganador_oficial RESTART IDENTITY CASCADE;"))
-        
         nuevo_ganador = Ganador(nombre=nombre, numero=numero, premio=premio)
         db.session.add(nuevo_ganador)
         db.session.commit()
-        
         flash("🏆 ¡Ganador publicado con éxito!", "success")
     else:
         flash("⚠️ Todos los campos son obligatorios.", "danger")
