@@ -20,7 +20,7 @@ app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('Zona B&R Rifa', os.environ.get('MAIL_USERNAME'))
+app.config['MAIL_DEFAULT_SENDER'] = ("Zona B&R Rifa", os.environ.get('MAIL_DEFAULT_SENDER'))
 
 # Configuración de archivos
 UPLOAD_FOLDER = os.path.join('static', 'uploads')

@@ -48,19 +48,24 @@ def aprobar_compra(compra_id):
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Envío de correo con captura de error detallada para diagnóstico
+            # Envío de correo con remitente forzado
             try:
-                msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
+                # Obtenemos el remitente verificado desde las variables de entorno
+                remitente = current_app.config.get('MAIL_DEFAULT_SENDER')
+                
+                msg = Message(
+                    subject="¡Tus números de la rifa!",
+                    sender=remitente,
+                    recipients=[compra.correo]
+                )
                 msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
                 
-                # Intentamos enviar
                 mail.send(msg)
                 flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
             except Exception as e:
-                # Esto imprimirá el error real en los logs de Render para que podamos verlo
-                error_detalle = f"ERROR SMTP DETALLADO: {str(e)}"
-                print(error_detalle)
-                flash(f"✅ Compra aprobada. (Error de correo: {str(e)})", "warning")
+                # Si falla, el sistema no se rompe
+                print(f"ERROR SMTP DETALLADO: {str(e)}")
+                flash(f"✅ Compra aprobada. (Aviso: Error al enviar correo, revisar logs)", "warning")
             
     except Exception as e:
         db.session.rollback()
