@@ -48,17 +48,17 @@ def aprobar_compra(compra_id):
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Envío de correo optimizado para evitar bloqueos del servidor
+            # Envío de correo no bloqueante
+            # Usamos mail.send directamente para no mantener conexiones persistentes que Render corta
             try:
-                with mail.connect() as conn:
-                    msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
-                    msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
-                    conn.send(msg)
+                msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
+                msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
+                mail.send(msg)
                 flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
             except Exception as e:
-                # Si el correo falla, no cancelamos la aprobación. Solo avisamos.
-                print(f"ERROR EN ENVÍO: {str(e)}")
-                flash(f"✅ Compra aprobada (aviso: error al enviar correo).", "warning")
+                # Si falla el correo, la compra ya está guardada. Solo notificamos al admin.
+                print(f"ERROR NO BLOQUEANTE EN ENVÍO: {str(e)}")
+                flash(f"✅ Compra aprobada (Aviso: Error al enviar correo, revisar logs).", "warning")
             
     except Exception as e:
         db.session.rollback()
