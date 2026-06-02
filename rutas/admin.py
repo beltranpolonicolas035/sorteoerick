@@ -32,26 +32,34 @@ def aprobar_compra(compra_id):
         compra = Compra.query.get_or_404(compra_id)
         if compra and compra.estado == 'pendiente':
             
-            # OPTIMIZACIÓN: Solo obtenemos los números, no el objeto completo
-            # Usamos un conjunto (set) para búsqueda instantánea
+            # Generación de números ocupados
             ocupados = {b[0] for b in db.session.query(Boleta.numero).all()}
             
             numeros_suerte = []
-            # Generación ligera en memoria
             while len(numeros_suerte) < compra.cantidad_tickets:
                 num = f"{random.randint(0, 99999):05d}"
                 if num not in ocupados:
                     numeros_suerte.append(num)
                     ocupados.add(num)
             
-            # Inserción eficiente
+            # Guardado en DB
             boletas_nuevas = [Boleta(numero=n, estado='vendido', compra_id=compra.id) for n in numeros_suerte]
             db.session.add_all(boletas_nuevas)
-            
             compra.estado = 'confirmado'
             db.session.commit()
             
-            flash(f"✅ Compra de {compra.nombre} aprobada.", "success")
+            # --- BLOQUE DE DEPURACIÓN DE CORREO ---
+            try:
+                print(f"DEBUG: Intentando enviar correo a {compra.correo}")
+                msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
+                msg.body = f"Tus números son: {', '.join(numeros_suerte)}"
+                mail.send(msg)
+                print("DEBUG: Correo enviado exitosamente")
+                flash(f"✅ Compra aprobada y correo enviado a {compra.nombre}.", "success")
+            except Exception as e:
+                print(f"DEBUG CRÍTICO: Error en el envío: {str(e)}")
+                flash(f"⚠️ Compra aprobada, pero hubo un error enviando el correo: {str(e)}", "warning")
+            # -------------------------------------
             
     except Exception as e:
         db.session.rollback()
