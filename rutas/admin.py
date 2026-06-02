@@ -106,15 +106,14 @@ def admin_historial():
 @login_requerido # RUTA PROTEGIDA
 def reiniciar_sistema():
     try:
-        db.session.query(Boleta).delete()
-        db.session.query(Compra).delete()
-        db.session.query(Ganador).delete()
+        # Limpieza de tablas (PostgreSQL compatible)
+        # Usamos TRUNCATE con RESTART IDENTITY para borrar datos y resetear IDs a 1
+        db.session.execute(db.text("TRUNCATE TABLE boletas RESTART IDENTITY CASCADE;"))
+        db.session.execute(db.text("TRUNCATE TABLE compras RESTART IDENTITY CASCADE;"))
+        db.session.execute(db.text("TRUNCATE TABLE ganador_oficial RESTART IDENTITY CASCADE;"))
         db.session.commit()
         
-        db.session.execute(db.text("ALTER TABLE boletas AUTO_INCREMENT = 1;"))
-        db.session.execute(db.text("ALTER TABLE compras AUTO_INCREMENT = 1;"))
-        db.session.commit()
-        
+        # Limpieza de archivos físicos
         folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         if os.path.exists(folder):
             for filename in os.listdir(folder):
@@ -125,7 +124,7 @@ def reiniciar_sistema():
                 except Exception as e:
                     print(f"Error borrando archivo {filename}: {e}")
         
-        flash('¡Sistema restablecido y archivos borrados con éxito!', 'success')
+        flash('¡Sistema restablecido correctamente en la nube!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error al reiniciar: {str(e)}', 'danger')
@@ -140,7 +139,8 @@ def publicar_ganador():
     premio = request.form.get('premio')
     
     if nombre and numero and premio:
-        db.session.query(Ganador).delete()
+        # Borramos al anterior ganador antes de publicar el nuevo
+        db.session.execute(db.text("TRUNCATE TABLE ganador_oficial RESTART IDENTITY CASCADE;"))
         
         nuevo_ganador = Ganador(nombre=nombre, numero=numero, premio=premio)
         db.session.add(nuevo_ganador)
