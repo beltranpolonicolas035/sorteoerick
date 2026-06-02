@@ -48,17 +48,19 @@ def aprobar_compra(compra_id):
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Envío de correo no bloqueante
-            # Usamos mail.send directamente para no mantener conexiones persistentes que Render corta
+            # Envío de correo con captura de error detallada para diagnóstico
             try:
                 msg = Message("¡Tus números de la rifa!", recipients=[compra.correo])
                 msg.body = f"Hola {compra.nombre}, tus números son: {', '.join(numeros_suerte)}"
+                
+                # Intentamos enviar
                 mail.send(msg)
                 flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
             except Exception as e:
-                # Si falla el correo, la compra ya está guardada. Solo notificamos al admin.
-                print(f"ERROR NO BLOQUEANTE EN ENVÍO: {str(e)}")
-                flash(f"✅ Compra aprobada (Aviso: Error al enviar correo, revisar logs).", "warning")
+                # Esto imprimirá el error real en los logs de Render para que podamos verlo
+                error_detalle = f"ERROR SMTP DETALLADO: {str(e)}"
+                print(error_detalle)
+                flash(f"✅ Compra aprobada. (Error de correo: {str(e)})", "warning")
             
     except Exception as e:
         db.session.rollback()
