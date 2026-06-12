@@ -192,5 +192,19 @@
             </div>
         </div>
     </div>
+
+    <!-- ===================== MODAL VISOR DE COMPROBANTE ===================== -->
+    <div id="imgModal" class="img-modal">
+        <div class="img-modal-card">
+            <button id="closeModalBtn" class="img-modal-close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <span class="img-modal-label">Comprobante de pago</span>
+            <img id="imgModalSrc" class="img-modal-img" src="" alt="Comprobante completo">
+        </div>
+    </div>
+    <!-- ===================================================================== -->
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>
