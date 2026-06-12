@@ -32,7 +32,6 @@ def aprobar_compra(compra_id):
         compra = Compra.query.get_or_404(compra_id)
         if compra and compra.estado == 'pendiente':
             
-            # Generación de números ocupados
             ocupados = {b[0] for b in db.session.query(Boleta.numero).all()}
             
             numeros_suerte = []
@@ -42,29 +41,22 @@ def aprobar_compra(compra_id):
                     numeros_suerte.append(num)
                     ocupados.add(num)
             
-            # Guardado en DB
             boletas_nuevas = [Boleta(numero=n, estado='vendido', compra_id=compra.id) for n in numeros_suerte]
             db.session.add_all(boletas_nuevas)
             compra.estado = 'confirmado'
             db.session.commit()
             
-            # Envío de correo con remitente forzado
             try:
-                # Obtenemos el remitente verificado desde las variables de entorno
                 remitente = current_app.config.get('MAIL_DEFAULT_SENDER')
-                
                 msg = Message(
                     subject="¡Tus números de la rifa!",
                     sender=remitente,
                     recipients=[compra.correo]
                 )
-                # Cámbialo a esto para que use el diseño HTML:
                 msg.html = render_template('correo.html', nombre=compra.nombre, numeros=numeros_suerte)
-                
                 mail.send(msg)
                 flash(f"✅ Compra de {compra.nombre} aprobada y correo enviado.", "success")
             except Exception as e:
-                # Si falla, el sistema no se rompe
                 print(f"ERROR SMTP DETALLADO: {str(e)}")
                 flash(f"✅ Compra aprobada. (Aviso: Error al enviar correo, revisar logs)", "warning")
             
@@ -88,16 +80,31 @@ def rechazar_compra(compra_id):
 @admin_bp.route('/admin/historial', methods=['GET'])
 @login_requerido
 def admin_historial():
-    buscar_usuario = request.args.get('buscar_usuario', '')
-    buscar_numero = request.args.get('buscar_numero', '')
+    buscar_usuario = request.args.get('buscar_usuario', '').strip()
+    buscar_numero = request.args.get('buscar_numero', '').strip()
     
     se_busco = bool(buscar_usuario or buscar_numero)
+    
+    # Si se busca por número puntual, manejarlo por separado para evitar errores de JOIN
+    if buscar_numero:
+        boleta = Boleta.query.filter_by(numero=buscar_numero).first()
+        if boleta:
+            usuarios_filtrados = Compra.query.filter_by(id=boleta.compra_id).all()
+        else:
+            usuarios_filtrados = []
+        return render_template(
+            'historial.html',
+            usuarios_historial=usuarios_filtrados,
+            buscar_usuario=buscar_usuario,
+            buscar_numero=buscar_numero,
+            se_busco=se_busco
+        )
+
+    # Búsqueda por nombre o cédula
     query = Compra.query.filter(Compra.estado != 'pendiente')
     
     if buscar_usuario:
-        query = query.filter((Compra.nombre.like(f"%{buscar_usuario}%")) | (Compra.cedula.like(f"%{buscar_usuario}%")))
-    if buscar_numero:
-        query = query.join(Boleta).filter(Boleta.numero == buscar_numero)
+        query = query.filter(db.cast(Compra.cedula, db.String).ilike(f"%{buscar_usuario}%"))
         
     usuarios_filtrados = query.order_by(Compra.fecha_creacion.desc()).all()
     
