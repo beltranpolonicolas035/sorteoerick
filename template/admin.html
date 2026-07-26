@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control | Zona B&R</title>
+    <title>Panel de Control | B³ Imperio de Rifas</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,10 +16,10 @@
 
     <nav class="admin-nav">
         <div class="admin-nav-brand">
-            <div class="admin-nav-logo">B&R</div>
+            <div class="admin-nav-logo">B³ Imperio de Rifas&</div>
             <div>
                 <span class="admin-nav-title">Panel de Control</span>
-                <span class="admin-nav-sub">Zona B&R · Administración</span>
+                <span class="admin-nav-sub">B³ Imperio de Rifas · Administración</span>
             </div>
         </div>
         <div class="admin-nav-right">
@@ -75,8 +75,22 @@
             <div class="admin-stat-card dark-card">
                 <div class="stat-icon-box gold">💰</div>
                 <div class="stat-body">
-                    <span class="stat-num">$0</span>
+                    <span class="stat-num">${{ "{:,.0f}".format(recaudado_hoy).replace(',', '.') }}</span>
                     <span class="stat-lbl">Recaudado hoy</span>
+                </div>
+            </div>
+            <div class="admin-stat-card dark-card">
+                <div class="stat-icon-box gold">📈</div>
+                <div class="stat-body">
+                    <span class="stat-num">${{ "{:,.0f}".format(recaudado_total).replace(',', '.') }}</span>
+                    <span class="stat-lbl">Total recaudado</span>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon-box amber">🔢</div>
+                <div class="stat-body">
+                    <span class="stat-num">{{ numeros_vendidos }}</span>
+                    <span class="stat-lbl">Números vendidos</span>
                 </div>
             </div>
         </div>
@@ -137,7 +151,7 @@
                                 </td>
                                 <td>
                                     <strong class="td-amount">
-                                        ${{ "{:,.0f}".format(compra.cantidad_tickets * 700).replace(',', '.') }}
+                                        ${{ "{:,.0f}".format(compra.cantidad_tickets * 200).replace(',', '.') }}
                                     </strong>
                                 </td>
                                 <td>

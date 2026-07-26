@@ -1,5 +1,6 @@
 import random
 import os
+from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from base_datos import db
 from modelos import Compra, Boleta, Ganador
@@ -9,6 +10,8 @@ from auth import login_requerido
 
 admin_bp = Blueprint('admin', __name__)
 
+PRECIO_POR_TICKET = 200  # Debe coincidir con static/js/selection.js
+
 @admin_bp.route('/admin')
 @login_requerido
 def admin():
@@ -16,13 +19,38 @@ def admin():
     total_pendientes = len(compras_pendientes)
     total_aprobados = Compra.query.filter_by(estado='confirmado').count()
     total_rechazados = Compra.query.filter_by(estado='rechazado').count()
-    
+    numeros_vendidos = Boleta.query.filter_by(estado='vendido').count()
+
+    # --- Cálculo de recaudo ---
+    # Usamos UTC porque Compra.fecha_creacion se guarda con CURRENT_TIMESTAMP de
+    # Postgres, que en servicios como Render está en UTC por defecto. Si comparamos
+    # contra date.today() (hora local del servidor/tu equipo), en Colombia (UTC-5)
+    # se puede desincronizar y "hoy" nunca coincide con lo guardado en la BD.
+    hoy = datetime.now(timezone.utc).date()
+
+    tickets_confirmados_total = db.session.query(
+        db.func.coalesce(db.func.sum(Compra.cantidad_tickets), 0)
+    ).filter(Compra.estado == 'confirmado').scalar()
+
+    tickets_confirmados_hoy = db.session.query(
+        db.func.coalesce(db.func.sum(Compra.cantidad_tickets), 0)
+    ).filter(
+        Compra.estado == 'confirmado',
+        db.func.date(Compra.fecha_creacion) == hoy
+    ).scalar()
+
+    recaudado_hoy = tickets_confirmados_hoy * PRECIO_POR_TICKET
+    recaudado_total = tickets_confirmados_total * PRECIO_POR_TICKET
+
     return render_template(
         'admin.html', 
         compras_pendientes=compras_pendientes,
         total_pendientes=total_pendientes,
         total_aprobados=total_aprobados,
-        total_rechazados=total_rechazados
+        total_rechazados=total_rechazados,
+        recaudado_hoy=recaudado_hoy,
+        recaudado_total=recaudado_total,
+        numeros_vendidos=numeros_vendidos
     )
 
 @admin_bp.route('/admin/aprobar/<int:compra_id>', methods=['POST'])

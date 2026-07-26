@@ -1,10 +1,11 @@
 /**
  * ==========================================================================
- * GESTIÓN DE SELECCIÓN DIRECTA CON LÍMITE MÁXIMO DE 99.999 - ZONA B&R
+ * GESTIÓN DE SELECCIÓN DIRECTA CON LÍMITE MÁXIMO DE 99.999 - B³ IMPERIO DE RIFAS
  * ==========================================================================
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const PRECIO_POR_TICKET = 700; // $700 COP por boleta
+    const PRECIO_POR_TICKET = 200; // $200 COP por boleta
+    const MIN_COMPRA = 40;          // Cantidad mínima de compra
     const MAX_ABSOLUTO = 99999;     // Tope máximo solicitado
 
     // Captura de elementos del DOM
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.classList.add('active');
 
             const qtyText = this.querySelector('.package-qty')?.textContent.trim();
-            const valorPaquete = parseInt(qtyText) || 20;
+            const valorPaquete = parseInt(qtyText) || MIN_COMPRA;
 
             actualizarInterfaz(valorPaquete);
         });
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // EVENTO: Botón Más (+) con límite de tope
     if (btnMas && inputCantidad) {
         btnMas.addEventListener('click', () => {
-            let actual = parseInt(inputCantidad.value) || 20;
+            let actual = parseInt(inputCantidad.value) || MIN_COMPRA;
             
             if (actual < MAX_ABSOLUTO) {
                 tarjetasPaquetes.forEach(t => t.classList.remove('active'));
@@ -83,13 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // EVENTO: Botón Menos (−)
     if (btnMenos && inputCantidad) {
         btnMenos.addEventListener('click', () => {
-            let actual = parseInt(inputCantidad.value) || 20;
+            let actual = parseInt(inputCantidad.value) || MIN_COMPRA;
             
-            if (actual > 20) {
+            if (actual > MIN_COMPRA) {
                 tarjetasPaquetes.forEach(t => t.classList.remove('active'));
                 actualizarInterfaz(actual - 1);
             } else {
-                alert("⚠️ Operación no permitida: La cantidad mínima de compra es de 20 tickets.");
+                alert(`⚠️ Operación no permitida: La cantidad mínima de compra es de ${MIN_COMPRA} tickets.`);
             }
         });
     }
@@ -115,11 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Control rígido con alerta al quitar el cursor del cuadro
         inputCantidad.addEventListener('blur', function() {
-            let valorFinal = parseInt(this.value) || 20;
+            let valorFinal = parseInt(this.value) || MIN_COMPRA;
             
-            if (valorFinal < 20) {
-                alert("⚠️ Ajuste automático: La cantidad mínima permitida es de 20 tickets.");
-                valorFinal = 20;
+            if (valorFinal < MIN_COMPRA) {
+                alert(`⚠️ Ajuste automático: La cantidad mínima permitida es de ${MIN_COMPRA} tickets.`);
+                valorFinal = MIN_COMPRA;
             }
             if (valorFinal > MAX_ABSOLUTO) {
                 alert(`⚠️ Límite excedido: El máximo permitido son ${MAX_ABSOLUTO.toLocaleString('es-CO')} tickets.`);
@@ -137,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Zona B&R - Sincronización del formulario de tickets
+ * B³ Imperio de Rifas - Sincronización del formulario de tickets
  * Sigue las buenas prácticas manteniendo la lógica fuera del HTML.
  */
 document.addEventListener("DOMContentLoaded", function() {
@@ -152,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function() {
             inputOculto.value = inputVisual.value;
         });
 
-        // 2. Escucha clics en los botones de paquetes preestablecidos (20, 50, 100, etc.)
+        // 2. Escucha clics en los botones de paquetes preestablecidos (40, 50, 100, etc.)
         document.querySelectorAll('.package-card').forEach(card => {
             card.addEventListener('click', function() {
                 // Un pequeño retraso de 50ms permite que el script principal de la tarjeta 
